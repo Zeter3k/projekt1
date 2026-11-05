@@ -79,7 +79,7 @@
 				}
 				.sidebar-item {
 				padding: 12px 15px;
-				border-radius: 8px;
+				border-radius: 4px;
 				cursor: pointer;
 				color: #94A3B8;
 				transition: all 0.2s;
@@ -116,8 +116,8 @@
 				.create-note-box {
 				background-color: #1E293B;
 				padding: 20px;
-				border-radius: 16px;
-				box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+				border-radius: 8px;
+				box-shadow: none;
 				margin-bottom: 40px;
 				display: flex;
 				flex-direction: column;
@@ -127,7 +127,7 @@
 				background-color: #0F172A;
 				border: 1px solid #334155;
 				padding: 15px;
-				border-radius: 8px;
+				border-radius: 4px;
 				color: #F8FAFC;
 				font-family: inherit;
 				font-size: 14px;
@@ -146,7 +146,7 @@
 				background-color: #8B5CF6;
 				color: #FFFFFF;
 				padding: 12px 25px;
-				border-radius: 8px;
+				border-radius: 4px;
 				font-weight: bold;
 				border: none;
 				cursor: pointer;
@@ -165,7 +165,7 @@
 				.note-card {
 				background-color: #1E293B;
 				padding: 20px;
-				border-radius: 16px;
+				border-radius: 8px;
 				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 				border-left: 5px solid #8B5CF6;
 				position: relative;
@@ -230,8 +230,8 @@
 				#expanded-view {
 				background-color: #1E293B;
 				padding: 40px;
-				border-radius: 16px;
-				box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+				border-radius: 8px;
+				box-shadow: none;
 				border-left: 5px solid #8B5CF6;
 				min-height: 50vh;
 				position: relative;
@@ -325,7 +325,7 @@
 		<div class="app-container" id="main-view">
 			<div class="create-note-box">
 				<input type="text" id="new-title" class="input-field" placeholder="Tytuł notatki...">
-					<textarea id="new-content" class="input-field" placeholder="Napisz nową notatkę... (zaczynająć od '-' tworzysz listę)"></textarea>
+					<textarea id="new-content" class="input-field" placeholder="Napisz nową notatkę... (zacznij od '-' aby stworzyć listę)"></textarea>
 					<button id="add-btn" class="action-button">Dodaj notatkę</button>
 				</div>
 			<div class="notes-grid" id="notes-grid">
