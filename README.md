@@ -1,6 +1,5 @@
 # Projekt 1 z Technologii Internetowych
----
-## Aplikacja do obsługi notatek
+### Aplikacja do obsługi notatek
 
 ### Funkcje
 - Możliwość tworzenia, usuwania i edytowania notatek
