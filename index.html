@@ -1,336 +1,42 @@
 <!DOCTYPE html>
 <html lang="pl">
-	<head>
-		<meta charset="UTF-8">
-			<title>Mój Notatnik</title>
-			<style>
-				body {
-				background-color: #0F172A;
-				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-				margin: 0;
-				padding: 0;
-				color: #F8FAFC;
-				overflow-x: hidden;
-				}
-				.top-bar {
-				background-color: #1E293B;
-				padding: 15px 20px;
-				display: flex;
-				align-items: center;
-				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-				position: sticky;
-				top: 0;
-				z-index: 100;
-				}
-				.menu-btn {
-				background: none;
-				border: none;
-				color: #F8FAFC;
-				font-size: 24px;
-				cursor: pointer;
-				margin-right: 20px;
-				}
-				.menu-btn:hover {
-				color: #8B5CF6;
-				}
-				.top-bar-title {
-				font-size: 18px;
-				font-weight: bold;
-				}
-				.sidebar {
-				position: fixed;
-				top: 0;
-				left: -300px;
-				width: 250px;
-				height: 100vh;
-				background-color: #1E293B;
-				box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
-				transition: left 0.3s ease;
-				z-index: 200;
-				padding: 20px;
-				display: flex;
-				flex-direction: column;
-				gap: 15px;
-				}
-				.sidebar.open {
-				left: 0;
-				}
-				.sidebar-header {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				margin-bottom: 20px;
-				border-bottom: 1px solid #334155;
-				padding-bottom: 15px;
-				}
-				.sidebar-title {
-				font-weight: bold;
-				font-size: 18px;
-				}
-				.close-sidebar {
-				background: none;
-				border: none;
-				color: #94A3B8;
-				font-size: 20px;
-				cursor: pointer;
-				}
-				.close-sidebar:hover {
-				color: #F8FAFC;
-				}
-				.sidebar-item {
-				padding: 12px 15px;
-				border-radius: 4px;
-				cursor: pointer;
-				color: #94A3B8;
-				transition: all 0.2s;
-				}
-				.sidebar-item:hover {
-				background-color: #0F172A;
-				color: #8B5CF6;
-				}
-				.sidebar-item.active {
-				background-color: #8B5CF6;
-				color: #FFFFFF;
-				}
-				.sidebar-overlay {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100vw;
-				height: 100vh;
-				background: rgba(0, 0, 0, 0.5);
-				opacity: 0;
-				pointer-events: none;
-				transition: opacity 0.3s ease;
-				z-index: 150;
-				}
-				.sidebar-overlay.open {
-				opacity: 1;
-				pointer-events: all;
-				}
-				.app-container {
-				max-width: 1000px;
-				margin: 40px auto;
-				padding: 0 20px;
-				}
-				.create-note-box {
-				background-color: #1E293B;
-				padding: 20px;
-				border-radius: 8px;
-				box-shadow: none;
-				margin-bottom: 40px;
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-				}
-				.input-field {
-				background-color: #0F172A;
-				border: 1px solid #334155;
-				padding: 15px;
-				border-radius: 4px;
-				color: #F8FAFC;
-				font-family: inherit;
-				font-size: 14px;
-				outline: none;
-				width: calc(100% - 32px);
-				margin: 0 auto;
-				}
-				.input-field::placeholder {
-				color: #94A3B8;
-				}
-				textarea.input-field {
-				resize: vertical;
-				min-height: 60px;
-				}
-				.action-button {
-				background-color: #8B5CF6;
-				color: #FFFFFF;
-				padding: 12px 25px;
-				border-radius: 4px;
-				font-weight: bold;
-				border: none;
-				cursor: pointer;
-				align-self: center;
-				margin-top: 10px;
-				font-size: 14px;
-				}
-				.action-button:hover {
-				background-color: #7C3AED;
-				}
-				.notes-grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-				gap: 20px;
-				}
-				.note-card {
-				background-color: #1E293B;
-				padding: 20px;
-				border-radius: 8px;
-				box-shadow: none;
-				border-left: 5px solid #8B5CF6;
-				position: relative;
-				cursor: pointer;
-				transition: transform 0.2s;
-				}
-				.note-card:hover {
-				transform: translateY(-5px);
-				}
-				.delete-btn {
-				position: absolute;
-				top: 15px;
-				right: 15px;
-				background: transparent;
-				border: none;
-				color: #EF4444;
-				font-weight: bold;
-				cursor: pointer;
-				font-size: 16px;
-				z-index: 10;
-				}
-				.delete-btn:hover {
-				color: #B91C1C;
-				}
-				.note-title {
-				font-weight: bold;
-				font-size: 18px;
-				margin-bottom: 10px;
-				color: #F8FAFC;
-				padding-right: 20px;
-				}
-				.note-content {
-				color: #94A3B8;
-				line-height: 1.5;
-				word-wrap: break-word;
-				display: -webkit-box;
-				-webkit-line-clamp: 4;
-				-webkit-box-orient: vertical;
-				overflow: hidden;
-				white-space: pre-wrap;
-				}
-				.avatars {
-				margin-top: 15px;
-				display: flex;
-				gap: 5px;
-				}
-				.avatar {
-				width: 25px;
-				height: 25px;
-				background-color: #8B5CF6;
-				color: #FFFFFF;
-				border-radius: 50%;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 12px;
-				font-weight: bold;
-				}
-				#expanded-view, #settings-view, #trash-view {
-				display: none;
-				}
-				#expanded-view {
-				background-color: #1E293B;
-				padding: 40px;
-				border-radius: 8px;
-				box-shadow: none;
-				border-left: 5px solid #8B5CF6;
-				min-height: 50vh;
-				position: relative;
-				}
-				.expanded-header {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				margin-bottom: 25px;
-				}
-				.back-btn {
-				background: none;
-				border: none;
-				color: #8B5CF6;
-				font-size: 16px;
-				font-weight: bold;
-				cursor: pointer;
-				padding: 0;
-				}
-				.back-btn:hover {
-				color: #7C3AED;
-				text-decoration: underline;
-				}
-				#expanded-title {
-				font-size: 28px;
-				font-weight: bold;
-				margin-bottom: 20px;
-				color: #F8FAFC;
-				}
-				#expanded-content {
-				font-size: 16px;
-				color: #94A3B8;
-				line-height: 1.8;
-				word-wrap: break-word;
-				white-space: pre-wrap;
-				}
-				#expanded-title-edit, #expanded-content-edit {
-				width: 100%;
-				margin: 0;
-				box-sizing: border-box;
-				background-color: #0F172A;
-				}
-				#expanded-title-edit {
-				font-size: 28px;
-				font-weight: bold;
-				margin-bottom: 20px;
-				}
-				#expanded-content-edit {
-				font-size: 16px;
-				line-height: 1.8;
-				min-height: 300px;
-				}
-				.section-title {
-				font-size: 24px;
-				font-weight: bold;
-				color: #F8FAFC;
-				margin-bottom: 20px;
-				}
-				#trash-grid .note-card {
-				border-left: 5px solid #EF4444;
-				}
-				.settings-label {
-				color: #94A3B8;
-				font-size: 14px;
-				margin-bottom: 5px;
-				text-align: left;
-				width: calc(100% - 32px);
-				margin-left: auto;
-				margin-right: auto;
-				}
-			</style>
-		</head>
-	<body>
 
-		<div class="top-bar">
-			<button id="open-menu" class="menu-btn">☰</button>
-			<span class="top-bar-title">Wspólny Notatnik</span>
+<head>
+	<meta charset="UTF-8">
+	<title>Mój Notatnik</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+	<div class="top-bar" style="text-align: center;">
+		<span class="top-bar-title">Wspólny Notatnik</span>
+		<div class="nickname-box">
+			<span id="nickname-text"></span>
+			<Button id="reset-nickname-btn">Zmień swoją nazwę</Button>
 		</div>
+	</div>
 
-		<div class="sidebar-overlay" id="sidebar-overlay"></div>
-		<div class="sidebar" id="sidebar">
-			<div class="sidebar-header">
-				<span class="sidebar-title">Menu</span>
-				<button id="close-menu" class="close-sidebar">✕</button>
+
+	<div class="app-container" id="main-view">
+		<div class="editor" style="display:none;">
+			<div class="editor-container">
+				<div id="highlight-layer"></div>
+				<textarea name="note-content" id="note-content" placeholder="Tresc notatki"></textarea>
 			</div>
-			<div class="sidebar-item active" id="nav-manage">Zarządzanie notatkami</div>
-			<div class="sidebar-item" id="nav-settings">Ustawienia konta</div>
-			<div class="sidebar-item" id="nav-trash">Kosz</div>
+			<div class="buttons-grid">
+				<Button id="close-note-btn">Zamknij notatke</Button>
+				<Button id="delete-note-btn">Usuń notatke</Button>
+			</div>
 		</div>
 
-		<div class="app-container" id="main-view">
+		<div class="notes-container">
 			<div class="create-note-box">
-				<input type="text" id="new-title" class="input-field" placeholder="Tytuł notatki...">
-					<textarea id="new-content" class="input-field" placeholder="Napisz nową notatkę... (zacznij od '-' aby stworzyć listę)"></textarea>
-					<button id="add-btn" class="action-button">Dodaj notatkę</button>
-				</div>
+				<input type="text" id="note-title-input" class="input-field" placeholder="Tytuł notatki...">
+				<button id="add-note-btn" class="action-button">Dodaj notatkę</button>
+			</div>
 			<div class="notes-grid" id="notes-grid">
-				<div class="note-card">
-					<button class="delete-btn">✕</button>
+				<!-- <div class="note-card">
 					<div class="note-title">Lista zakupów</div>
 					<div class="note-content">
 						- Mleko
@@ -341,240 +47,282 @@
 					<div class="avatars">
 						<div class="avatar" title="Ja">J</div>
 					</div>
-				</div>
+				</div> -->
 			</div>
 		</div>
+	</div>
 
-		<div class="app-container" id="expanded-view">
-			<div class="expanded-header">
-				<button id="back-btn" class="back-btn">← Wróć</button>
-				<div>
-					<button id="edit-note-btn" class="action-button" style="margin-top: 0; padding: 8px 16px;">Edytuj</button>
-					<button id="save-note-btn" class="action-button" style="margin-top: 0; padding: 8px 16px; display: none; background-color: #10B981;">Zapisz</button>
-				</div>
-			</div>
-			<div id="expanded-title">Tytuł</div>
-			<input type="text" id="expanded-title-edit" class="input-field" style="display: none;">
 
-				<div id="expanded-content">Treść</div>
-				<textarea id="expanded-content-edit" class="input-field" style="display: none;"></textarea>
-			</div>
+	<script>
 
-		<div class="app-container" id="settings-view">
-			<div class="section-title">Ustawienia konta</div>
-			<div class="create-note-box">
-				<div class="settings-label">Twoje imię i nazwisko:</div>
-				<input type="text" id="username-input" class="input-field" placeholder="np. Anna Kowalska" value="Ja">
-					<button id="save-user-btn" class="action-button">Zapisz użytkownika</button>
-				</div>
-		</div>
+		let note_id = 0;
+		let socket = null;
 
-		<div class="app-container" id="trash-view">
-			<div class="section-title">Kosz</div>
-			<div class="notes-grid" id="trash-grid">
-			</div>
-		</div>
+		const textarea = document.getElementById("note-content");
+		const button = document.querySelector("button");
 
-		<script>
-			let currentUserName = "Ja";
-			let currentUserInitials = "J";
-			let currentEditingCard = null;
+		const notesContainer = document.querySelector(".notes-container");
+		const editorContainer = document.querySelector(".editor");
 
-			const openMenuBtn = document.getElementById('open-menu');
-			const closeMenuBtn = document.getElementById('close-menu');
-			const sidebar = document.getElementById('sidebar');
-			const overlay = document.getElementById('sidebar-overlay');
+		const closeNoteButton = document.getElementById("close-note-btn");
+		const deleteNoteButton = document.getElementById("delete-note-btn");
+		const resetNicknameButton = document.getElementById("reset-nickname-btn");
+		const addNoteButton = document.getElementById("add-note-btn");
+		const noteTitleInput = document.getElementById("note-title-input");
 
-			const navManage = document.getElementById('nav-manage');
-			const navSettings = document.getElementById('nav-settings');
-			const navTrash = document.getElementById('nav-trash');
+		const nicknameText = document.getElementById("nickname-text");
 
-			const mainView = document.getElementById('main-view');
-			const expandedView = document.getElementById('expanded-view');
-			const settingsView = document.getElementById('settings-view');
-			const trashView = document.getElementById('trash-view');
+		let nicknameValue = localStorage.getItem("nickname") || prompt("Podaj swoją nazwę:", "Anonim");
+		localStorage.setItem("nickname", nicknameValue);
+		nicknameText.textContent = nicknameValue;
 
-			const backBtn = document.getElementById('back-btn');
-			const addBtn = document.getElementById('add-btn');
-			const notesGrid = document.getElementById('notes-grid');
-			const trashGrid = document.getElementById('trash-grid');
-			const titleInput = document.getElementById('new-title');
-			const contentInput = document.getElementById('new-content');
+		// fetch http://0.0.0.0:8000/api/getNotes and foreach notes-grid
+		function fetchNotes() {
+			fetch("http://localhost:8000/api/getNotes").then(
+				res => {
+					const notesGrid = document.getElementById("notes-grid");
+					res.json().then(
+						data => {
+							notesGrid.innerHTML = "";
+							data.forEach(note => {
+								const noteCard = document.createElement("div");
+								noteCard.className = "note-card";
+								noteCard.innerHTML = `
+								<div class="note-title">${note.name}</div>
+								<div class="note-content">${note.content || ""}</div>
+								<div class="avatars">
+									<div class="avatar" title="${note.author}">${note.author.charAt(0).toUpperCase()}</div>
+								</div>
+							`;
+								noteCard.addEventListener("click", () => {
+									if (socket) {
+										socket.close();
+									}
 
-			const usernameInput = document.getElementById('username-input');
-			const saveUserBtn = document.getElementById('save-user-btn');
+									console.log(note.id)
 
-			const editNoteBtn = document.getElementById('edit-note-btn');
-			const saveNoteBtn = document.getElementById('save-note-btn');
-			const expandedTitle = document.getElementById('expanded-title');
-			const expandedContent = document.getElementById('expanded-content');
-			const expandedTitleEdit = document.getElementById('expanded-title-edit');
-			const expandedContentEdit = document.getElementById('expanded-content-edit');
+									note_id = note.id;
+									fetch(`http://localhost:8000/api/getNote/${note_id}`);
 
-			function toggleMenu() {
-			sidebar.classList.toggle('open');
-			overlay.classList.toggle('open');
+									socket = new WebSocket(
+										`ws://localhost:8000/ws/editNote/${note_id}`
+									);
+
+
+									socket.onmessage = function (event) {
+
+										const data = JSON.parse(event.data);
+
+										if (data.type === "initial") {
+
+											textarea.value = data.content;
+
+											renderRemoteSelection();
+
+											return;
+										}
+
+										if (data.type === "content") {
+
+											const selection = {
+												start: textarea.selectionStart,
+												end: textarea.selectionEnd,
+												direction: textarea.selectionDirection
+											};
+
+											textarea.value = data.content;
+
+											textarea.setSelectionRange(
+												selection.start,
+												selection.end,
+												selection.direction
+											);
+
+											// Update the remote highlight
+											remoteSelection = data.selection;
+
+											renderRemoteSelection();
+										}
+
+										else if (data.type === "selection") {
+
+											remoteSelection = data.selection;
+
+											renderRemoteSelection();
+
+										}
+
+									};
+
+									socket.onopen = function () {
+										console.log("WebSocket connected");
+									};
+
+									socket.onclose = function () {
+										console.log("WebSocket disconnected");
+									};
+
+									socket.onerror = function (error) {
+										console.error("WebSocket error:", error);
+									};
+
+									notesContainer.style.display = "none";
+									editorContainer.style.display = "block";
+
+
+								});
+								notesGrid.appendChild(noteCard);
+							});
+						}
+					)
+				}
+			)
+
+		}
+
+		fetchNotes();
+
+		textarea.addEventListener("input", function () {
+			console.log(note_id)
+			// Update the highlight layer immediately
+			renderRemoteSelection();
+
+			if (socket && socket.readyState === WebSocket.OPEN) {
+
+				socket.send(JSON.stringify({
+					type: "content",
+					content: textarea.value,
+					nickname: nicknameValue,
+					selection: {
+						start: textarea.selectionStart,
+						end: textarea.selectionEnd,
+						direction: textarea.selectionDirection
+					}
+				}));
+
 			}
 
-			openMenuBtn.addEventListener('click', toggleMenu);
-			closeMenuBtn.addEventListener('click', toggleMenu);
-			overlay.addEventListener('click', toggleMenu);
+		});
 
-			function switchView(activeNav, viewToShow) {
-			[navManage, navSettings, navTrash].forEach(nav => nav.classList.remove('active'));
-			activeNav.classList.add('active');
+		textarea.addEventListener("select", sendSelection);
 
-			[mainView, expandedView, settingsView, trashView].forEach(view => view.style.display = 'none');
-			viewToShow.style.display = 'block';
-			toggleMenu();
+		textarea.addEventListener("keyup", sendSelection);
+
+		textarea.addEventListener("mouseup", sendSelection);
+
+		textarea.addEventListener("blur", sendSelection);
+
+		function sendSelection() {
+			if (socket && socket.readyState === WebSocket.OPEN) {
+
+				socket.send(JSON.stringify({
+					type: "selection",
+					nickname: nicknameValue,
+					selection: {
+						start: textarea.selectionStart,
+						end: textarea.selectionEnd,
+						direction: textarea.selectionDirection
+					}
+				}));
+
+			}
+		}
+
+		const highlightLayer = document.getElementById("highlight-layer");
+
+		let remoteSelection = null;
+
+		function renderRemoteSelection() {
+
+			const content = textarea.value;
+
+			highlightLayer.replaceChildren();
+
+			if (!remoteSelection) {
+				highlightLayer.textContent = content;
+				return;
 			}
 
-			navManage.addEventListener('click', () => switchView(navManage, mainView));
-			navSettings.addEventListener('click', () => switchView(navSettings, settingsView));
-			navTrash.addEventListener('click', () => switchView(navTrash, trashView));
+			const start = Math.max(
+				0,
+				Math.min(remoteSelection.start, content.length)
+			);
 
-			backBtn.addEventListener('click', () => {
-			expandedView.style.display = 'none';
-			mainView.style.display = 'block';
-			resetEditMode();
+			const end = Math.max(
+				start,
+				Math.min(remoteSelection.end, content.length)
+			);
+
+			const before = content.slice(0, start);
+			const selected = content.slice(start, end);
+			const after = content.slice(end);
+
+			highlightLayer.appendChild(
+				document.createTextNode(before)
+			);
+
+			if (selected.length > 0) {
+				const mark = document.createElement("mark");
+				mark.textContent = selected;
+				highlightLayer.appendChild(mark);
+			}
+
+			highlightLayer.appendChild(
+				document.createTextNode(after)
+			);
+		}
+
+		closeNoteButton.addEventListener("click", () => {
+			if (socket) {
+				socket.close();
+			}
+			note_id = 0;
+			editorContainer.style.display = "none";
+			notesContainer.style.display = "block";
+		});
+
+		deleteNoteButton.addEventListener("click", () => {
+			fetch(`http://localhost:8000/api/deleteNote?note_id=${note_id}`, { method: "POST" }).then(() => {
+				if (socket) {
+					socket.close();
+				}
+				note_id = 0;
+				editorContainer.style.display = "none";
+				notesContainer.style.display = "block";
+				fetchNotes();
 			});
+		});
 
-			saveUserBtn.addEventListener('click', () => {
-			currentUserName = usernameInput.value.trim() || "Ja";
-			const parts = currentUserName.split(' ');
-			if (parts.length >= 2) {
-			currentUserInitials = (parts[0][0] + parts[1][0]).toUpperCase();
-			} else {
-			currentUserInitials = currentUserName.charAt(0).toUpperCase();
+		addNoteButton.addEventListener("click", () => {
+			const name = noteTitleInput.value.trim();
+			if (name) {
+				fetch(`http://localhost:8000/api/addNote`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ name: name, author: nicknameValue })
+
+				}).then(() => {
+					noteTitleInput.value = "";
+					fetchNotes();
+				});
 			}
-			alert("Zapisano dane użytkownika!");
-			});
+		});
 
-			addBtn.addEventListener('click', () => {
-			const titleValue = titleInput.value.trim();
-			const contentValue = contentInput.value.trim();
-
-			if (titleValue === '' && contentValue === '') return;
-
-			const newCard = document.createElement('div');
-			newCard.className = 'note-card';
-
-			newCard.innerHTML = `
-			<button class="delete-btn">✕</button>
-			<div class="note-title">${titleValue || 'Bez tytułu'}</div>
-			<div class="note-content">${contentValue}</div>
-			<div class="avatars">
-				<div class="avatar" title="${currentUserName}">${currentUserInitials}</div>
-			</div>
-			`;
-
-			notesGrid.prepend(newCard);
-			titleInput.value = '';
-			contentInput.value = '';
-			});
-
-			notesGrid.addEventListener('click', (e) => {
-			if (e.target.classList.contains('delete-btn')) {
-			e.stopPropagation();
-			const card = e.target.closest('.note-card');
-			trashGrid.prepend(card);
-			return;
+		resetNicknameButton.addEventListener("click", () => {
+			localStorage.removeItem("nickname");
+			const newNickname = prompt("Podaj swoją nazwę:", "Anonim");
+			if (newNickname) {
+				localStorage.setItem("nickname", newNickname);
+				alert(`Twoja nowa nazwa to: ${newNickname}`);
 			}
+			nicknameValue = newNickname;
+			nicknameText.textContent = newNickname;
+			location.reload();
+		});
 
-			const card = e.target.closest('.note-card');
-			if (card) {
-			currentEditingCard = card;
-			const title = card.querySelector('.note-title').innerText;
-			const content = card.querySelector('.note-content').innerText;
+	</script>
+</body>
 
-			expandedTitle.innerText = title;
-			expandedContent.innerText = content;
-
-			resetEditMode();
-
-			mainView.style.display = 'none';
-			expandedView.style.display = 'block';
-			}
-			});
-
-			trashGrid.addEventListener('click', (e) => {
-			if (e.target.classList.contains('delete-btn')) {
-			e.stopPropagation();
-			const isConfirmed = confirm("Czy na pewno chcesz usunąć tę notatkę trwale? Ta akcja jest nieodwracalna.");
-			if (isConfirmed) {
-			e.target.closest('.note-card').remove();
-			}
-			}
-			});
-
-			editNoteBtn.addEventListener('click', () => {
-			expandedTitleEdit.value = expandedTitle.innerText;
-			expandedContentEdit.value = expandedContent.innerText;
-
-			expandedTitle.style.display = 'none';
-			expandedContent.style.display = 'none';
-
-			expandedTitleEdit.style.display = 'block';
-			expandedContentEdit.style.display = 'block';
-
-			editNoteBtn.style.display = 'none';
-			saveNoteBtn.style.display = 'inline-block';
-
-			expandedContentEdit.focus();
-			});
-
-			saveNoteBtn.addEventListener('click', () => {
-			const newTitle = expandedTitleEdit.value;
-			const newContent = expandedContentEdit.value;
-
-			expandedTitle.innerText = newTitle;
-			expandedContent.innerText = newContent;
-
-			if (currentEditingCard) {
-			currentEditingCard.querySelector('.note-title').innerText = newTitle || 'Bez tytułu';
-			currentEditingCard.querySelector('.note-content').innerText = newContent;
-			}
-			resetEditMode();
-			});
-
-			function resetEditMode() {
-			expandedTitle.style.display = 'block';
-			expandedContent.style.display = 'block';
-
-			expandedTitleEdit.style.display = 'none';
-			expandedContentEdit.style.display = 'none';
-
-			editNoteBtn.style.display = 'inline-block';
-			saveNoteBtn.style.display = 'none';
-			}
-
-			function handleAutoBullet(e) {
-			if (e.key === 'Enter') {
-			const el = e.target;
-			const cursorPos = el.selectionStart;
-			const textBefore = el.value.substring(0, cursorPos);
-			const lines = textBefore.split('\n');
-			const currentLine = lines[lines.length - 1];
-
-			const match = currentLine.match(/^(\s*-)\s*/);
-
-			if (match) {
-			e.preventDefault();
-			const prefix = match[1] + " ";
-
-			if (currentLine.trim() === '-') {
-			el.value = el.value.substring(0, cursorPos - currentLine.length) + '\n' + el.value.substring(el.selectionEnd);
-			el.selectionStart = el.selectionEnd = cursorPos - currentLine.length + 1;
-			} else {
-			el.value = el.value.substring(0, cursorPos) + '\n' + prefix + el.value.substring(el.selectionEnd);
-			el.selectionStart = el.selectionEnd = cursorPos + 1 + prefix.length;
-			}
-			}
-			}
-			}
-
-			contentInput.addEventListener('keydown', handleAutoBullet);
-			expandedContentEdit.addEventListener('keydown', handleAutoBullet);
-		</script>
-	</body>
 </html>
