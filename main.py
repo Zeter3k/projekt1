@@ -61,8 +61,30 @@ async def get():
 @app.get("/api/getNotes")
 async def get_notes():
     with Session(engine) as session:
-        notes = session.exec(select(Note)).all()
-        return notes
+        # notes = session.exec(select(Note)).all()
+        notes = []
+        for note in session.exec(select(Note)).all():
+            prepared_note = {
+                "id": note.id,
+                "name": note.name,
+                "author": note.author,
+                "creation_date": note.creation_date,
+                "last_edit_date": note.last_edit_date,
+
+            }
+
+            # get first 50 chars and add
+            try:
+                with open(f"notes/{note.id}.txt", "r", encoding="utf-8") as f:
+                    print(note.id)
+                    content = f.read()
+                    prepared_note["content"] = content[:50]
+            except FileNotFoundError:
+                prepared_note["content"] = ""
+            notes.append(prepared_note)
+    return notes
+        
+        # return notes
 
 @app.get("/api/getNote/{note_id}")
 async def get_note(note_id: int):
