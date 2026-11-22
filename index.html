@@ -17,13 +17,34 @@
 		</div>
 	</div>
 
-
 	<div class="app-container" id="main-view">
 		<div class="editor" style="display:none;">
+			<div class="editor-header">
+				<div class="rename-box">
+					<input type="text" id="edit-note-title" class="input-field" placeholder="Tytuł notatki...">
+					<button id="rename-note-btn" class="secondary-button">Zapisz tytuł</button>
+				</div>
+				<div class="active-users-box">
+					<span class="active-users-label">Aktywni w notatce:</span>
+					<div id="active-users-list" class="active-users-list"></div>
+				</div>
+			</div>
+
 			<div class="editor-container">
 				<div id="highlight-layer"></div>
 				<textarea name="note-content" id="note-content" placeholder="Tresc notatki"></textarea>
 			</div>
+
+			<div class="editor-toolbar">
+				<div class="stats-box" id="editor-stats">
+					Znaki: 0 | Słowa: 0 | Linie: 1
+				</div>
+				<div class="tools-box">
+					<button id="copy-note-btn" class="secondary-button">Kopiuj treść</button>
+					<button id="download-note-btn" class="secondary-button">Pobierz .txt</button>
+				</div>
+			</div>
+
 			<div class="buttons-grid">
 				<Button id="close-note-btn">Zamknij notatke</Button>
 				<Button id="delete-note-btn">Usuń notatke</Button>
@@ -34,6 +55,14 @@
 			<div class="create-note-box">
 				<input type="text" id="note-title-input" class="input-field" placeholder="Tytuł notatki...">
 				<button id="add-note-btn" class="action-button">Dodaj notatkę</button>
+			</div>
+			<div class="filter-bar">
+				<input type="text" id="search-input" class="input-field search-field" placeholder="Szukaj po tytule, treści lub autorze...">
+				<select id="sort-select" class="sort-select">
+					<option value="newest">Ostatnio edytowane</option>
+					<option value="oldest">Najstarsze</option>
+					<option value="alpha">Alfabetycznie (A-Z)</option>
+				</select>
 			</div>
 			<div class="notes-grid" id="notes-grid">
 				<!-- <div class="note-card">
@@ -58,6 +87,50 @@
 		let note_id = 0;
 		let socket = null;
 
+		let currentNoteTitle = "";
+		let allNotes = [];
+
+		const searchInput = document.getElementById("search-input");
+		const sortSelect = document.getElementById("sort-select");
+		const editNoteTitleInput = document.getElementById("edit-note-title");
+		const renameNoteButton = document.getElementById("rename-note-btn");
+		const activeUsersList = document.getElementById("active-users-list");
+		const editorStats = document.getElementById("editor-stats");
+		const copyNoteButton = document.getElementById("copy-note-btn");
+		const downloadNoteButton = document.getElementById("download-note-btn");
+
+		function formatDate(isoString) {
+		if (!isoString) return "Brak daty";
+		const date = new Date(isoString);
+		if (isNaN(date.getTime())) return isoString;
+		return date.toLocaleString("pl-PL", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+		hour: "2-digit",
+		minute: "2-digit"
+		});
+		}
+
+		function updateStats() {
+		const text = textarea.value;
+		const chars = text.length;
+		const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+		const lines = text === "" ? 1 : text.split("\n").length;
+		editorStats.textContent = `Znaki: ${chars} | Słowa: ${words} | Linie: ${lines}`;
+		}
+
+		function renderActiveUsers(users) {
+		activeUsersList.innerHTML = "";
+		const uniqueUsers = [...new Set(users)];
+		uniqueUsers.forEach(user => {
+		const badge = document.createElement("span");
+		badge.className = "user-badge";
+		badge.textContent = user;
+		activeUsersList.appendChild(badge);
+		});
+		}
+
 		const textarea = document.getElementById("note-content");
 		const button = document.querySelector("button");
 
@@ -77,130 +150,162 @@
 		nicknameText.textContent = nicknameValue;
 
 		// fetch http://0.0.0.0:8000/api/getNotes and foreach notes-grid
+		function renderNotes() {
+		const notesGrid = document.getElementById("notes-grid");
+		const query = searchInput.value.toLowerCase().trim();
+		const sortBy = sortSelect.value;
+
+		let filtered = allNotes.filter(note => {
+		const titleMatch = (note.name || "").toLowerCase().includes(query);
+		const contentMatch = (note.content || "").toLowerCase().includes(query);
+		const authorMatch = (note.author || "").toLowerCase().includes(query);
+		return titleMatch || contentMatch || authorMatch;
+		});
+
+		filtered.sort((a, b) => {
+		if (sortBy === "alpha") {
+		return (a.name || "").localeCompare(b.name || "", "pl");
+		} else if (sortBy === "oldest") {
+		return new Date(a.creation_date || 0) - new Date(b.creation_date || 0);
+		} else {
+		return new Date(b.last_edit_date || 0) - new Date(a.last_edit_date || 0);
+		}
+		});
+
+		notesGrid.innerHTML = "";
+
+		if (filtered.length === 0) {
+		notesGrid.innerHTML = `<div class="empty-state">Brak notatek spełniających kryteria.</div>`;
+		return;
+		}
+
+		filtered.forEach(note => {
+		const noteCard = document.createElement("div");
+		noteCard.className = "note-card";
+		noteCard.innerHTML = `
+		<div class="note-title">${note.name}</div>
+		<div class="note-content">${note.content || ""}</div>
+		<div class="note-footer">
+		<div class="avatars">
+		<div class="avatar" title="${note.author}">${note.author.charAt(0).toUpperCase()}</div>
+		<span class="note-author-name">${note.author}</span>
+		</div>
+		<div class="note-date">Edycja: ${formatDate(note.last_edit_date)}</div>
+		</div>
+		`;
+		noteCard.addEventListener("click", () => {
+		if (socket) {
+		socket.close();
+		}
+
+		note_id = note.id;
+		currentNoteTitle = note.name;
+		editNoteTitleInput.value = note.name;
+
+		fetch(`http://localhost:8000/api/getNote/${note_id}`);
+
+		socket = new WebSocket(
+		`ws://localhost:8000/ws/editNote/${note_id}?nickname=${encodeURIComponent(nicknameValue)}`
+		);
+
+		socket.onmessage = function (event) {
+		const data = JSON.parse(event.data);
+
+		if (data.type === "initial") {
+		textarea.value = data.content;
+		updateStats();
+		if (data.users) renderActiveUsers(data.users);
+		renderRemoteSelection();
+		return;
+		}
+
+		if (data.type === "users") {
+		renderActiveUsers(data.users);
+		return;
+		}
+
+		if (data.type === "rename") {
+		currentNoteTitle = data.name;
+		editNoteTitleInput.value = data.name;
+		return;
+		}
+
+		if (data.type === "content") {
+		const selection = {
+		start: textarea.selectionStart,
+		end: textarea.selectionEnd,
+		direction: textarea.selectionDirection
+		};
+
+		textarea.value = data.content;
+		updateStats();
+
+		textarea.setSelectionRange(
+		selection.start,
+		selection.end,
+		selection.direction
+		);
+
+		remoteSelection = data.selection;
+		renderRemoteSelection();
+		} else if (data.type === "selection") {
+		remoteSelection = data.selection;
+		renderRemoteSelection();
+		}
+		};
+
+		socket.onopen = function () {
+		console.log("WebSocket connected");
+		};
+
+		socket.onclose = function () {
+		console.log("WebSocket disconnected");
+		};
+
+		socket.onerror = function (error) {
+		console.error("WebSocket error:", error);
+		};
+
+		notesContainer.style.display = "none";
+		editorContainer.style.display = "block";
+		});
+		notesGrid.appendChild(noteCard);
+		});
+		}
+
 		function fetchNotes() {
-			fetch("http://localhost:8000/api/getNotes").then(
-				res => {
-					const notesGrid = document.getElementById("notes-grid");
-					res.json().then(
-						data => {
-							notesGrid.innerHTML = "";
-							data.forEach(note => {
-								const noteCard = document.createElement("div");
-								noteCard.className = "note-card";
-								noteCard.innerHTML = `
-								<div class="note-title">${note.name}</div>
-								<div class="note-content">${note.content || ""}</div>
-								<div class="avatars">
-									<div class="avatar" title="${note.author}">${note.author.charAt(0).toUpperCase()}</div>
-								</div>
-							`;
-								noteCard.addEventListener("click", () => {
-									if (socket) {
-										socket.close();
-									}
-
-									console.log(note.id)
-
-									note_id = note.id;
-									fetch(`http://localhost:8000/api/getNote/${note_id}`);
-
-									socket = new WebSocket(
-										`ws://localhost:8000/ws/editNote/${note_id}`
-									);
-
-
-									socket.onmessage = function (event) {
-
-										const data = JSON.parse(event.data);
-
-										if (data.type === "initial") {
-
-											textarea.value = data.content;
-
-											renderRemoteSelection();
-
-											return;
-										}
-
-										if (data.type === "content") {
-
-											const selection = {
-												start: textarea.selectionStart,
-												end: textarea.selectionEnd,
-												direction: textarea.selectionDirection
-											};
-
-											textarea.value = data.content;
-
-											textarea.setSelectionRange(
-												selection.start,
-												selection.end,
-												selection.direction
-											);
-
-											// Update the remote highlight
-											remoteSelection = data.selection;
-
-											renderRemoteSelection();
-										}
-
-										else if (data.type === "selection") {
-
-											remoteSelection = data.selection;
-
-											renderRemoteSelection();
-
-										}
-
-									};
-
-									socket.onopen = function () {
-										console.log("WebSocket connected");
-									};
-
-									socket.onclose = function () {
-										console.log("WebSocket disconnected");
-									};
-
-									socket.onerror = function (error) {
-										console.error("WebSocket error:", error);
-									};
-
-									notesContainer.style.display = "none";
-									editorContainer.style.display = "block";
-
-
-								});
-								notesGrid.appendChild(noteCard);
-							});
-						}
-					)
-				}
-			)
-
+		fetch("http://localhost:8000/api/getNotes")
+		.then(res => res.json())
+		.then(data => {
+		allNotes = data;
+		renderNotes();
+		});
 		}
 
 		fetchNotes();
+		searchInput.addEventListener("input", renderNotes);
+		sortSelect.addEventListener("change", renderNotes);
 
 		textarea.addEventListener("input", function () {
-			console.log(note_id)
-			// Update the highlight layer immediately
-			renderRemoteSelection();
+		console.log(note_id)
+		// Update the highlight layer immediately
+		updateStats();
+		renderRemoteSelection();
 
-			if (socket && socket.readyState === WebSocket.OPEN) {
+		if (socket && socket.readyState === WebSocket.OPEN) {
 
-				socket.send(JSON.stringify({
-					type: "content",
-					content: textarea.value,
-					nickname: nicknameValue,
-					selection: {
-						start: textarea.selectionStart,
-						end: textarea.selectionEnd,
-						direction: textarea.selectionDirection
-					}
-				}));
+		socket.send(JSON.stringify({
+		type: "content",
+		content: textarea.value,
+		nickname: nicknameValue,
+		selection: {
+		start: textarea.selectionStart,
+		end: textarea.selectionEnd,
+		direction: textarea.selectionDirection
+		}
+		}));
 
-			}
+		}
 
 		});
 
@@ -213,19 +318,19 @@
 		textarea.addEventListener("blur", sendSelection);
 
 		function sendSelection() {
-			if (socket && socket.readyState === WebSocket.OPEN) {
+		if (socket && socket.readyState === WebSocket.OPEN) {
 
-				socket.send(JSON.stringify({
-					type: "selection",
-					nickname: nicknameValue,
-					selection: {
-						start: textarea.selectionStart,
-						end: textarea.selectionEnd,
-						direction: textarea.selectionDirection
-					}
-				}));
+		socket.send(JSON.stringify({
+		type: "selection",
+		nickname: nicknameValue,
+		selection: {
+		start: textarea.selectionStart,
+		end: textarea.selectionEnd,
+		direction: textarea.selectionDirection
+		}
+		}));
 
-			}
+		}
 		}
 
 		const highlightLayer = document.getElementById("highlight-layer");
@@ -234,93 +339,136 @@
 
 		function renderRemoteSelection() {
 
-			const content = textarea.value;
+		const content = textarea.value;
 
-			highlightLayer.replaceChildren();
+		highlightLayer.replaceChildren();
 
-			if (!remoteSelection) {
-				highlightLayer.textContent = content;
-				return;
-			}
+		if (!remoteSelection) {
+		highlightLayer.textContent = content;
+		return;
+		}
 
-			const start = Math.max(
-				0,
-				Math.min(remoteSelection.start, content.length)
-			);
+		const start = Math.max(
+		0,
+		Math.min(remoteSelection.start, content.length)
+		);
 
-			const end = Math.max(
-				start,
-				Math.min(remoteSelection.end, content.length)
-			);
+		const end = Math.max(
+		start,
+		Math.min(remoteSelection.end, content.length)
+		);
 
-			const before = content.slice(0, start);
-			const selected = content.slice(start, end);
-			const after = content.slice(end);
+		const before = content.slice(0, start);
+		const selected = content.slice(start, end);
+		const after = content.slice(end);
 
-			highlightLayer.appendChild(
-				document.createTextNode(before)
-			);
+		highlightLayer.appendChild(
+		document.createTextNode(before)
+		);
 
-			if (selected.length > 0) {
-				const mark = document.createElement("mark");
-				mark.textContent = selected;
-				highlightLayer.appendChild(mark);
-			}
+		if (selected.length > 0) {
+		const mark = document.createElement("mark");
+		mark.textContent = selected;
+		highlightLayer.appendChild(mark);
+		}
 
-			highlightLayer.appendChild(
-				document.createTextNode(after)
-			);
+		highlightLayer.appendChild(
+		document.createTextNode(after)
+		);
 		}
 
 		closeNoteButton.addEventListener("click", () => {
-			if (socket) {
-				socket.close();
-			}
-			note_id = 0;
-			editorContainer.style.display = "none";
-			notesContainer.style.display = "block";
-			fetchNotes();
+		if (socket) {
+		socket.close();
+		}
+		note_id = 0;
+		editorContainer.style.display = "none";
+		notesContainer.style.display = "block";
+		fetchNotes();
 		});
 
 		deleteNoteButton.addEventListener("click", () => {
-			fetch(`http://localhost:8000/api/deleteNote?note_id=${note_id}`, { method: "POST" }).then(() => {
-				if (socket) {
-					socket.close();
-				}
-				note_id = 0;
-				editorContainer.style.display = "none";
-				notesContainer.style.display = "block";
-				fetchNotes();
-			});
+		fetch(`http://localhost:8000/api/deleteNote?note_id=${note_id}`, { method: "POST" }).then(() => {
+		if (socket) {
+		socket.close();
+		}
+		note_id = 0;
+		editorContainer.style.display = "none";
+		notesContainer.style.display = "block";
+		fetchNotes();
+		});
 		});
 
 		addNoteButton.addEventListener("click", () => {
-			const name = noteTitleInput.value.trim();
-			if (name) {
-				fetch(`http://localhost:8000/api/addNote`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ name: name, author: nicknameValue })
+		const name = noteTitleInput.value.trim();
+		if (name) {
+		fetch(`http://localhost:8000/api/addNote`, {
+		method: "POST",
+		headers: {
+		"Content-Type": "application/json"
+		},
+		body: JSON.stringify({ name: name, author: nicknameValue })
 
-				}).then(() => {
-					noteTitleInput.value = "";
-					fetchNotes();
-				});
-			}
+		}).then(() => {
+		noteTitleInput.value = "";
+		fetchNotes();
+		});
+		}
 		});
 
 		resetNicknameButton.addEventListener("click", () => {
-			localStorage.removeItem("nickname");
-			const newNickname = prompt("Podaj swoją nazwę:", "Anonim");
-			if (newNickname) {
-				localStorage.setItem("nickname", newNickname);
-				alert(`Twoja nowa nazwa to: ${newNickname}`);
-			}
-			nicknameValue = newNickname;
-			nicknameText.textContent = newNickname;
-			location.reload();
+		localStorage.removeItem("nickname");
+		const newNickname = prompt("Podaj swoją nazwę:", "Anonim");
+		if (newNickname) {
+		localStorage.setItem("nickname", newNickname);
+		alert(`Twoja nowa nazwa to: ${newNickname}`);
+		}
+		nicknameValue = newNickname;
+		nicknameText.textContent = newNickname;
+		location.reload();
+		});
+
+		renameNoteButton.addEventListener("click", () => {
+		const newTitle = editNoteTitleInput.value.trim();
+		if (!newTitle || !note_id) return;
+
+		fetch(`http://localhost:8000/api/renameNote/${note_id}`, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ name: newTitle })
+		}).then(() => {
+		currentNoteTitle = newTitle;
+		if (socket && socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({
+		type: "rename",
+		name: newTitle
+		}));
+		}
+		const originalText = renameNoteButton.textContent;
+		renameNoteButton.textContent = "Zapisano!";
+		setTimeout(() => { renameNoteButton.textContent = originalText; }, 1500);
+		});
+		});
+
+		copyNoteButton.addEventListener("click", () => {
+		navigator.clipboard.writeText(textarea.value).then(() => {
+		const originalText = copyNoteButton.textContent;
+		copyNoteButton.textContent = "Skopiowano!";
+		setTimeout(() => { copyNoteButton.textContent = originalText; }, 1500);
+		});
+		});
+
+		downloadNoteButton.addEventListener("click", () => {
+		const blob = new Blob([textarea.value], { type: "text/plain;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		const safeFilename = (currentNoteTitle || "notatka").replace(/[^a-z0-9ąęćłńóśźż_-]/gi, "_");
+		a.href = url;
+		a.download = `${safeFilename}.txt`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
 		});
 
 	</script>

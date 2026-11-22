@@ -287,3 +287,148 @@ body {
     font-size: 12px;
     float: right;
 }
+
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0 25px 0;
+    align-items: center;
+}
+
+.search-field {
+    flex: 1;
+    width: auto;
+    margin: 0;
+}
+
+.sort-select {
+    background-color: #1E293B;
+    color: #F8FAFC;
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+}
+
+.note-footer {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #94A3B8;
+}
+
+    .note-footer .avatars {
+        margin-top: 0;
+        align-items: center;
+        gap: 8px;
+    }
+
+.note-author-name {
+    color: #CBD5E1;
+    font-weight: 500;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #94A3B8;
+    padding: 40px;
+    background-color: #1E293B;
+    border-radius: 8px;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+    background-color: #1E293B;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.rename-box {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    min-width: 260px;
+}
+
+    .rename-box .input-field {
+        padding: 10px 12px;
+        width: 100%;
+    }
+
+.active-users-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.active-users-label {
+    font-size: 13px;
+    color: #94A3B8;
+}
+
+.active-users-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.user-badge {
+    background-color: #8B5CF6;
+    color: #FFFFFF;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 15px;
+    background-color: #1E293B;
+    border-radius: 8px;
+}
+
+.stats-box {
+    font-size: 13px;
+    color: #94A3B8;
+    font-family: monospace;
+}
+
+.tools-box {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-button {
+    background-color: #334155;
+    color: #F8FAFC;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+    .secondary-button:hover {
+        background-color: #475569;
+    }
